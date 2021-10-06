@@ -68,11 +68,13 @@ func (multiWorkspaceConfig *MultiWorkspaceConfig) GetWorkspaceLibrariesForWorksp
 }
 
 //Get returns sources from all hosted workspaces
-func (multiWorkspaceConfig *MultiWorkspaceConfig) Get(initialized bool, pollInterval time.Duration) (ConfigT, bool) {
+func (multiWorkspaceConfig *MultiWorkspaceConfig) Get() (ConfigT, bool) {
 	url := fmt.Sprintf("%s/cachedHostedWorkspaceConfig?fetchAll=true", configBackendURL)
+	initializedLock.RLock()
 	if initialized {
 		url += fmt.Sprintf("&updatedAfter=%s", successfulQueryTimeStamp.UTC().Format(misc.RFC3339Milli))
 	}
+	initializedLock.RUnlock()
 
 	var respBody []byte
 	var statusCode int
@@ -175,16 +177,27 @@ func (multiWorkspaceConfig *MultiWorkspaceConfig) GetRegulations() (RegulationsT
 	return regulationsJSON, true
 }
 
-func (multiWorkspaceConfig *MultiWorkspaceConfig) EnhanceConfig(existingConfig, configToPatch *ConfigT) {
-	existingConfig.Libraries = configToPatch.Libraries
-	existingConfig.EnableMetrics = configToPatch.EnableMetrics
-	existingConfig.ConnectionFlags = configToPatch.ConnectionFlags
+func (multiWorkspaceConfig *MultiWorkspaceConfig) PatchConfig(configToPatch ConfigT) {
+	initializedLock.RLock()
+	defer initializedLock.RUnlock()
+	if !initialized {
+		curSourceJSON = configToPatch
+		return
+	}
+	curSourceJSON.Libraries = configToPatch.Libraries
+	curSourceJSON.EnableMetrics = configToPatch.EnableMetrics
+	curSourceJSON.ConnectionFlags = configToPatch.ConnectionFlags
 
 	for _, sourcePatch := range configToPatch.Sources {
-		for i := range existingConfig.Sources {
-			if sourcePatch.ID == existingConfig.Sources[i].ID {
-				existingConfig.Sources[i] = sourcePatch
+		newSource := true
+		for i := range curSourceJSON.Sources {
+			if sourcePatch.ID == curSourceJSON.Sources[i].ID {
+				curSourceJSON.Sources[i] = sourcePatch
+				newSource = false
 			}
+		}
+		if newSource {
+			curSourceJSON.Sources = append(curSourceJSON.Sources, sourcePatch)
 		}
 	}
 }

@@ -39,16 +39,16 @@ func (workspaceConfig *WorkspaceConfig) GetWorkspaceLibrariesForWorkspaceID(work
 }
 
 //Get returns sources from the workspace
-func (workspaceConfig *WorkspaceConfig) Get(initialized bool, pollInterval time.Duration) (ConfigT, bool) {
+func (workspaceConfig *WorkspaceConfig) Get() (ConfigT, bool) {
 	if configFromFile {
 		return workspaceConfig.getFromFile()
 	} else {
-		return workspaceConfig.getFromAPI(initialized, pollInterval)
+		return workspaceConfig.getFromAPI()
 	}
 }
 
-func (workspaceConfig *WorkspaceConfig) EnhanceConfig(existingConfig, configToPatch *ConfigT) {
-	*existingConfig = *configToPatch
+func (workspaceConfig *WorkspaceConfig) PatchConfig(configToPatch ConfigT) {
+	curSourceJSON = configToPatch
 }
 
 //GetRegulations returns sources from the workspace
@@ -61,7 +61,7 @@ func (workspaceConfig *WorkspaceConfig) GetRegulations() (RegulationsT, bool) {
 }
 
 // getFromApi gets the workspace config from api
-func (workspaceConfig *WorkspaceConfig) getFromAPI(initialized bool, pollInterval time.Duration) (ConfigT, bool) {
+func (workspaceConfig *WorkspaceConfig) getFromAPI() (ConfigT, bool) {
 	url := fmt.Sprintf("%s/workspaceConfig?fetchAll=true", configBackendURL)
 
 	var respBody []byte

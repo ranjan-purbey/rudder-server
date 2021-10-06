@@ -179,13 +179,13 @@ type LibrariesT []LibraryT
 
 type BackendConfig interface {
 	SetUp()
-	Get(bool, time.Duration) (ConfigT, bool)
+	Get() (ConfigT, bool)
 	GetRegulations() (RegulationsT, bool)
 	GetWorkspaceIDForWriteKey(string) string
 	GetWorkspaceLibrariesForWorkspaceID(string) LibrariesT
 	WaitForConfig()
 	Subscribe(channel chan utils.DataEvent, topic Topic)
-	EnhanceConfig(*ConfigT, *ConfigT)
+	PatchConfig(ConfigT)
 }
 type CommonBackendConfig struct {
 	configEnvHandler types.ConfigEnvI
@@ -284,7 +284,7 @@ func regulationsUpdate(statConfigBackendError stats.RudderStats) {
 
 func configUpdate(statConfigBackendError stats.RudderStats) {
 	queryTimeStamp := time.Now()
-	sourceJSON, ok := backendConfig.Get(initialized, pollInterval)
+	sourceJSON, ok := backendConfig.Get()
 	if !ok {
 		statConfigBackendError.Increment()
 	}
@@ -299,7 +299,7 @@ func configUpdate(statConfigBackendError stats.RudderStats) {
 		pkgLogger.Info("Workspace Config changed")
 		curSourceJSONLock.Lock()
 		trackConfig(curSourceJSON, sourceJSON)
-		backendConfig.EnhanceConfig(&curSourceJSON, &sourceJSON)
+		backendConfig.PatchConfig(sourceJSON)
 		filteredSourcesJSON := filterProcessorEnabledDestinations(curSourceJSON)
 		curSourceJSONLock.Unlock()
 		initializedLock.Lock()
