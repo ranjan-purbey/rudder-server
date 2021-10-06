@@ -6,6 +6,7 @@ package mock_backendconfig
 
 import (
 	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 	backendconfig "github.com/rudderlabs/rudder-server/config/backend-config"
@@ -35,19 +36,31 @@ func (m *MockBackendConfig) EXPECT() *MockBackendConfigMockRecorder {
 	return m.recorder
 }
 
-// Get mocks base method.
-func (m *MockBackendConfig) Get() (backendconfig.ConfigT, bool) {
+// EnhanceConfig mocks base method.
+func (m *MockBackendConfig) EnhanceConfig(arg0, arg1 *backendconfig.ConfigT) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get")
+	m.ctrl.Call(m, "EnhanceConfig", arg0, arg1)
+}
+
+// EnhanceConfig indicates an expected call of EnhanceConfig.
+func (mr *MockBackendConfigMockRecorder) EnhanceConfig(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnhanceConfig", reflect.TypeOf((*MockBackendConfig)(nil).EnhanceConfig), arg0, arg1)
+}
+
+// Get mocks base method.
+func (m *MockBackendConfig) Get(arg0 bool, arg1 time.Duration) (backendconfig.ConfigT, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", arg0, arg1)
 	ret0, _ := ret[0].(backendconfig.ConfigT)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockBackendConfigMockRecorder) Get() *gomock.Call {
+func (mr *MockBackendConfigMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockBackendConfig)(nil).Get))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockBackendConfig)(nil).Get), arg0, arg1)
 }
 
 // GetRegulations mocks base method.
