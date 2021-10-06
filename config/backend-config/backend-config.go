@@ -41,6 +41,7 @@ var (
 	LastRegulationSync                    string
 	maxRegulationsPerRequest              int
 	configEnvReplacementEnabled           bool
+	successfulQueryTimeStamp              time.Time
 
 	//DefaultBackendConfig will be initialized be Setup to either a WorkspaceConfig or MultiWorkspaceConfig.
 	DefaultBackendConfig BackendConfig
@@ -184,6 +185,7 @@ type BackendConfig interface {
 	GetWorkspaceLibrariesForWorkspaceID(string) LibrariesT
 	WaitForConfig()
 	Subscribe(channel chan utils.DataEvent, topic Topic)
+	EnhanceConfig(*ConfigT, *ConfigT)
 }
 type CommonBackendConfig struct {
 	configEnvHandler types.ConfigEnvI
@@ -280,45 +282,8 @@ func regulationsUpdate(statConfigBackendError stats.RudderStats) {
 	}
 }
 
-func (existingConfig *ConfigT) enhanceConfig(configToPatch ConfigT) {
-	existingConfig.Libraries = configToPatch.Libraries
-	for _, sourcePatch := range configToPatch.Sources {
-		newSource := true
-		for _, existingSource := range existingConfig.Sources {
-			if sourcePatch.ID == existingSource.ID {
-				newSource = false
-				existingSource.Config = sourcePatch.Config
-				existingSource.Enabled = sourcePatch.Enabled
-				existingSource.Name = sourcePatch.Name
-				existingSource.SourceDefinition = sourcePatch.SourceDefinition
-				for _, destPatch := range sourcePatch.Destinations {
-					newDest := true
-					for _, existingDest := range existingSource.Destinations {
-						if existingDest.ID == destPatch.ID {
-							newDest = false
-							existingDest.Name = destPatch.Name
-							existingDest.Config = destPatch.Config
-							existingDest.Enabled = destPatch.Enabled
-							existingDest.Transformations = destPatch.Transformations
-							existingDest.IsProcessorEnabled = destPatch.IsProcessorEnabled
-							existingDest.DestinationDefinition = destPatch.DestinationDefinition
-						}
-					}
-					if newDest {
-						existingSource.Destinations = append(existingSource.Destinations, destPatch)
-					}
-				}
-			}
-		}
-		if newSource {
-			existingConfig.Sources = append(existingConfig.Sources, sourcePatch)
-		}
-	}
-	existingConfig.ConnectionFlags = configToPatch.ConnectionFlags
-}
-
 func configUpdate(statConfigBackendError stats.RudderStats) {
-
+	queryTimeStamp := time.Now()
 	sourceJSON, ok := backendConfig.Get(initialized, pollInterval)
 	if !ok {
 		statConfigBackendError.Increment()
@@ -330,11 +295,11 @@ func configUpdate(statConfigBackendError stats.RudderStats) {
 		return sourceJSON.Sources[i].ID < sourceJSON.Sources[j].ID
 	})
 
-	if ok && !reflect.DeepEqual(curSourceJSON, sourceJSON) {
+	if ok && !((isMultiWorkspace && reflect.DeepEqual(ConfigT{}, sourceJSON)) || reflect.DeepEqual(curSourceJSON, sourceJSON)) {
 		pkgLogger.Info("Workspace Config changed")
 		curSourceJSONLock.Lock()
 		trackConfig(curSourceJSON, sourceJSON)
-		curSourceJSON.enhanceConfig(sourceJSON)
+		backendConfig.EnhanceConfig(&curSourceJSON, &sourceJSON)
 		filteredSourcesJSON := filterProcessorEnabledDestinations(curSourceJSON)
 		curSourceJSONLock.Unlock()
 		initializedLock.Lock()
@@ -343,6 +308,7 @@ func configUpdate(statConfigBackendError stats.RudderStats) {
 		LastSync = time.Now().Format(time.RFC3339)
 		Eb.Publish(string(TopicBackendConfig), curSourceJSON)
 		Eb.Publish(string(TopicProcessConfig), filteredSourcesJSON)
+		successfulQueryTimeStamp = queryTimeStamp
 	}
 }
 
@@ -432,6 +398,7 @@ func (bc *CommonBackendConfig) WaitForConfig() {
 
 // Setup backend config
 func Setup(pollRegulations bool, configEnvHandler types.ConfigEnvI) {
+	successfulQueryTimeStamp = time.Now()
 	if isMultiWorkspace {
 		backendConfig = new(MultiWorkspaceConfig)
 	} else {

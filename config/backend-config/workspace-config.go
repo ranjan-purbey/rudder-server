@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/rudderlabs/rudder-server/utils/misc"
 	"github.com/tidwall/gjson"
 )
 
@@ -48,6 +47,10 @@ func (workspaceConfig *WorkspaceConfig) Get(initialized bool, pollInterval time.
 	}
 }
 
+func (workspaceConfig *WorkspaceConfig) EnhanceConfig(existingConfig, configToPatch *ConfigT) {
+	*existingConfig = *configToPatch
+}
+
 //GetRegulations returns sources from the workspace
 func (workspaceConfig *WorkspaceConfig) GetRegulations() (RegulationsT, bool) {
 	if configFromFile {
@@ -60,9 +63,6 @@ func (workspaceConfig *WorkspaceConfig) GetRegulations() (RegulationsT, bool) {
 // getFromApi gets the workspace config from api
 func (workspaceConfig *WorkspaceConfig) getFromAPI(initialized bool, pollInterval time.Duration) (ConfigT, bool) {
 	url := fmt.Sprintf("%s/workspaceConfig?fetchAll=true", configBackendURL)
-	if initialized {
-		url += fmt.Sprintf("&updatedAfter=%s", time.Now().Add(-pollInterval).UTC().Format(misc.RFC3339Milli))
-	}
 
 	var respBody []byte
 	var statusCode int
