@@ -26,6 +26,7 @@ var _ = Describe("workspace-config", func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockLogger = mock_logger.NewMockLoggerI(ctrl)
 		pkgLogger = mockLogger
+		initialized = false
 	})
 	AfterEach(func() {
 		initialized = false

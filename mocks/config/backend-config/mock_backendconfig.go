@@ -6,7 +6,6 @@ package mock_backendconfig
 
 import (
 	reflect "reflect"
-	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 	backendconfig "github.com/rudderlabs/rudder-server/config/backend-config"
@@ -36,31 +35,19 @@ func (m *MockBackendConfig) EXPECT() *MockBackendConfigMockRecorder {
 	return m.recorder
 }
 
-// EnhanceConfig mocks base method.
-func (m *MockBackendConfig) EnhanceConfig(arg0, arg1 *backendconfig.ConfigT) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "EnhanceConfig", arg0, arg1)
-}
-
-// EnhanceConfig indicates an expected call of EnhanceConfig.
-func (mr *MockBackendConfigMockRecorder) EnhanceConfig(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnhanceConfig", reflect.TypeOf((*MockBackendConfig)(nil).EnhanceConfig), arg0, arg1)
-}
-
 // Get mocks base method.
-func (m *MockBackendConfig) Get(arg0 bool, arg1 time.Duration) (backendconfig.ConfigT, bool) {
+func (m *MockBackendConfig) Get() (backendconfig.ConfigT, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", arg0, arg1)
+	ret := m.ctrl.Call(m, "Get")
 	ret0, _ := ret[0].(backendconfig.ConfigT)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockBackendConfigMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBackendConfigMockRecorder) Get() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockBackendConfig)(nil).Get), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockBackendConfig)(nil).Get))
 }
 
 // GetRegulations mocks base method.
@@ -104,6 +91,18 @@ func (m *MockBackendConfig) GetWorkspaceLibrariesForWorkspaceID(arg0 string) bac
 func (mr *MockBackendConfigMockRecorder) GetWorkspaceLibrariesForWorkspaceID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWorkspaceLibrariesForWorkspaceID", reflect.TypeOf((*MockBackendConfig)(nil).GetWorkspaceLibrariesForWorkspaceID), arg0)
+}
+
+// PatchConfig mocks base method.
+func (m *MockBackendConfig) PatchConfig(arg0 backendconfig.ConfigT) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PatchConfig", arg0)
+}
+
+// PatchConfig indicates an expected call of PatchConfig.
+func (mr *MockBackendConfigMockRecorder) PatchConfig(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchConfig", reflect.TypeOf((*MockBackendConfig)(nil).PatchConfig), arg0)
 }
 
 // SetUp mocks base method.
